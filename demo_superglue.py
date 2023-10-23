@@ -119,19 +119,18 @@ if __name__ == '__main__':
     print(opt)
 
     if len(opt.resize) == 2 and opt.resize[1] == -1:
-        opt.resize = opt.resize[0:1]
+        opt.resize = opt.resize[:1]
     if len(opt.resize) == 2:
-        print('Will resize to {}x{} (WxH)'.format(
-            opt.resize[0], opt.resize[1]))
+        print(f'Will resize to {opt.resize[0]}x{opt.resize[1]} (WxH)')
     elif len(opt.resize) == 1 and opt.resize[0] > 0:
-        print('Will resize max dimension to {}'.format(opt.resize[0]))
+        print(f'Will resize max dimension to {opt.resize[0]}')
     elif len(opt.resize) == 1:
         print('Will not resize images')
     else:
         raise ValueError('Cannot specify more than two integers for --resize')
 
     device = 'cuda' if torch.cuda.is_available() and not opt.force_cpu else 'cpu'
-    print('Running inference on device \"{}\"'.format(device))
+    print(f'Running inference on device \"{device}\"')
     config = {
         'superpoint': {
             'nms_radius': opt.nms_radius,
@@ -154,13 +153,13 @@ if __name__ == '__main__':
 
     frame_tensor = frame2tensor(frame, device)
     last_data = matching.superpoint({'image': frame_tensor})
-    last_data = {k+'0': last_data[k] for k in keys}
+    last_data = {f'{k}0': last_data[k] for k in keys}
     last_data['image0'] = frame_tensor
     last_frame = frame
     last_image_id = 0
 
     if opt.output_dir is not None:
-        print('==> Will write outputs to {}'.format(opt.output_dir))
+        print(f'==> Will write outputs to {opt.output_dir}')
         Path(opt.output_dir).mkdir(exist_ok=True)
 
     # Create a window to display the demo.
@@ -202,8 +201,8 @@ if __name__ == '__main__':
         color = cm.jet(confidence[valid])
         text = [
             'SuperGlue',
-            'Keypoints: {}:{}'.format(len(kpts0), len(kpts1)),
-            'Matches: {}'.format(len(mkpts0))
+            f'Keypoints: {len(kpts0)}:{len(kpts1)}',
+            f'Matches: {len(mkpts0)}',
         ]
         k_thresh = matching.superpoint.config['keypoint_threshold']
         m_thresh = matching.superglue.config['match_threshold']
@@ -224,18 +223,18 @@ if __name__ == '__main__':
                 print('Exiting (via q) demo_superglue.py')
                 break
             elif key == 'n':  # set the current frame as anchor
-                last_data = {k+'0': pred[k+'1'] for k in keys}
+                last_data = {f'{k}0': pred[f'{k}1'] for k in keys}
                 last_data['image0'] = frame_tensor
                 last_frame = frame
                 last_image_id = (vs.i - 1)
-            elif key in ['e', 'r']:
+            elif key in {'e', 'r'}:
                 # Increase/decrease keypoint threshold by 10% each keypress.
                 d = 0.1 * (-1 if key == 'e' else 1)
                 matching.superpoint.config['keypoint_threshold'] = min(max(
                     0.0001, matching.superpoint.config['keypoint_threshold']*(1+d)), 1)
                 print('\nChanged the keypoint threshold to {:.4f}'.format(
                     matching.superpoint.config['keypoint_threshold']))
-            elif key in ['d', 'f']:
+            elif key in {'d', 'f'}:
                 # Increase/decrease match threshold by 0.05 each keypress.
                 d = 0.05 * (-1 if key == 'd' else 1)
                 matching.superglue.config['match_threshold'] = min(max(
@@ -251,8 +250,8 @@ if __name__ == '__main__':
         if opt.output_dir is not None:
             #stem = 'matches_{:06}_{:06}'.format(last_image_id, vs.i-1)
             stem = 'matches_{:06}_{:06}'.format(stem0, stem1)
-            out_file = str(Path(opt.output_dir, stem + '.png'))
-            print('\nWriting image to {}'.format(out_file))
+            out_file = str(Path(opt.output_dir, f'{stem}.png'))
+            print(f'\nWriting image to {out_file}')
             cv2.imwrite(out_file, out)
 
     cv2.destroyAllWindows()

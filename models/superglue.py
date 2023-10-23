@@ -131,10 +131,7 @@ class AttentionalGNN(nn.Module):
 
     def forward(self, desc0: torch.Tensor, desc1: torch.Tensor) -> Tuple[torch.Tensor,torch.Tensor]:
         for layer, name in zip(self.layers, self.names):
-            if name == 'cross':
-                src0, src1 = desc1, desc0
-            else:  # if name == 'self':
-                src0, src1 = desc0, desc1
+            src0, src1 = (desc1, desc0) if name == 'cross' else (desc0, desc1)
             delta0, delta1 = layer(desc0, src0), layer(desc1, src1)
             desc0, desc1 = (desc0 + delta0), (desc1 + delta1)
         return desc0, desc1
@@ -222,10 +219,9 @@ class SuperGlue(nn.Module):
 
         assert self.config['weights'] in ['indoor', 'outdoor']
         path = Path(__file__).parent
-        path = path / 'weights/superglue_{}.pth'.format(self.config['weights'])
+        path = path / f"weights/superglue_{self.config['weights']}.pth"
         self.load_state_dict(torch.load(str(path)))
-        print('Loaded SuperGlue model (\"{}\" weights)'.format(
-            self.config['weights']))
+        print(f"""Loaded SuperGlue model (\"{self.config['weights']}\" weights)""")
 
     def forward(self, data):
         """Run SuperGlue on a pair of keypoints and descriptors"""

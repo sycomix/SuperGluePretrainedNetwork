@@ -64,10 +64,10 @@ class Matching(torch.nn.Module):
         # Extract SuperPoint (keypoints, scores, descriptors) if not provided
         if 'keypoints0' not in data:
             pred0 = self.superpoint({'image': data['image0']})
-            pred = {**pred, **{k+'0': v for k, v in pred0.items()}}
+            pred = pred | {f'{k}0': v for k, v in pred0.items()}
         if 'keypoints1' not in data:
             pred1 = self.superpoint({'image': data['image1']})
-            pred = {**pred, **{k+'1': v for k, v in pred1.items()}}
+            pred = pred | {f'{k}1': v for k, v in pred1.items()}
 
         # Batch all features
         # We should either have i) one image per batch, or

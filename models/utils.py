@@ -82,10 +82,10 @@ class AverageTimer:
 
     def print(self, text='Timer'):
         total = 0.
-        print('[{}]'.format(text), end=' ')
+        print(f'[{text}]', end=' ')
         for key in self.times:
-            val = self.times[key]
             if self.will_print[key]:
+                val = self.times[key]
                 print('%s=%.3f' % (key, val), end=' ')
                 total += val
         print('total=%.3f sec {%.1f FPS}' % (total, 1./total), end=' ')
@@ -119,17 +119,17 @@ class VideoStreamer:
         self.skip = skip
         self.max_length = max_length
         if isinstance(basedir, int) or basedir.isdigit():
-            print('==> Processing USB webcam input: {}'.format(basedir))
+            print(f'==> Processing USB webcam input: {basedir}')
             self.cap = cv2.VideoCapture(int(basedir))
             self.listing = range(0, self.max_length)
         elif basedir.startswith(('http', 'rtsp')):
-            print('==> Processing IP camera input: {}'.format(basedir))
+            print(f'==> Processing IP camera input: {basedir}')
             self.cap = cv2.VideoCapture(basedir)
             self.start_ip_camera_thread()
             self._ip_camera = True
             self.listing = range(0, self.max_length)
         elif Path(basedir).is_dir():
-            print('==> Processing image directory input: {}'.format(basedir))
+            print(f'==> Processing image directory input: {basedir}')
             self.listing = list(Path(basedir).glob(image_glob[0]))
             for j in range(1, len(image_glob)):
                 image_path = list(Path(basedir).glob(image_glob[j]))
@@ -142,7 +142,7 @@ class VideoStreamer:
             self.listing = self.listing[:self.max_length]
             self.camera = False
         elif Path(basedir).exists():
-            print('==> Processing video input: {}'.format(basedir))
+            print(f'==> Processing video input: {basedir}')
             self.cap = cv2.VideoCapture(basedir)
             self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             num_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -152,7 +152,7 @@ class VideoStreamer:
             self.max_length = np.min([self.max_length, len(self.listing)])
             self.listing = self.listing[:self.max_length]
         else:
-            raise ValueError('VideoStreamer input \"{}\" not recognized.'.format(basedir))
+            raise ValueError(f'VideoStreamer input \"{basedir}\" not recognized.')
         if self.camera and not self.cap.isOpened():
             raise IOError('Could not read camera')
 
@@ -165,7 +165,7 @@ class VideoStreamer:
         """
         grayim = cv2.imread(impath, 0)
         if grayim is None:
-            raise Exception('Error reading image %s' % impath)
+            raise Exception(f'Error reading image {impath}')
         w, h = grayim.shape[1], grayim.shape[0]
         w_new, h_new = process_resize(w, h, self.resize)
         grayim = cv2.resize(
@@ -369,9 +369,10 @@ def compute_epipolar_error(kpts0, kpts1, T_0to1, K0, K1):
     Ep0 = kpts0 @ E.T  # N x 3
     p1Ep0 = np.sum(kpts1 * Ep0, -1)  # N
     Etp1 = kpts1 @ E  # N x 3
-    d = p1Ep0**2 * (1.0 / (Ep0[:, 0]**2 + Ep0[:, 1]**2)
-                    + 1.0 / (Etp1[:, 0]**2 + Etp1[:, 1]**2))
-    return d
+    return p1Ep0**2 * (
+        1.0 / (Ep0[:, 0] ** 2 + Ep0[:, 1] ** 2)
+        + 1.0 / (Etp1[:, 0] ** 2 + Etp1[:, 1] ** 2)
+    )
 
 
 def angle_error_mat(R1, R2):
